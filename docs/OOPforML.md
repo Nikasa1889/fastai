@@ -23,7 +23,8 @@ This is one of the two most common ways to build up an ML pipeline, which indeed
 
 We see that, the Make pipeline is a linear execuation graph where output of one step is fed into input of the next one.
 With OOP approach, the big step can excecute its small steps in whatever order it needs, which can even be looping or branching.
-In this doc, we explore the fastai approach, especially focus on the several important concepts that fastai uses to objectify an ML pipeline.
+In this doc, we explore the fastai approach, especially focus on how fastai breaks up the pipeline into steps.
+Each step has a protocol that you must follow if you want to implement a the step yourself.
 
 ## Fastai ML components:
 - Data Pipeline
