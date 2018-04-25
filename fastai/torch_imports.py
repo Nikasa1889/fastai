@@ -17,6 +17,7 @@ from .models.wrn_50_2f import wrn_50_2f
 from .models.inceptionresnetv2 import InceptionResnetV2
 from .models.inceptionv4 import InceptionV4
 from .models.nasnet import nasnetalarge
+from .models.fa_resnet import *
 
 import warnings
 warnings.filterwarnings('ignore', message='Implicit dimension choice', category=UserWarning)
@@ -44,7 +45,7 @@ def _fastai_model(name, paper_title, paper_href):
 
 @_fastai_model('Inception 4', 'Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning',
                'https://arxiv.org/pdf/1602.07261.pdf')
-def inception_4(pre): return children(load_pre(pre, InceptionV4, 'inceptionv4-97ef9c30'))[0]
+def inception_4(pre): return children(inceptionv4(pretrained=pre))[0]
 
 @_fastai_model('Inception 4', 'Inception-v4, Inception-ResNet and the Impact of Residual Connections on Learning',
                'https://arxiv.org/pdf/1602.07261.pdf')
@@ -62,7 +63,7 @@ def resnext101(pre): return load_pre(pre, resnext_101_32x4d, 'resnext_101_32x4d'
                'https://arxiv.org/abs/1611.05431')
 def resnext101_64(pre): return load_pre(pre, resnext_101_64x4d, 'resnext_101_64x4d')
 
-@_fastai_model('Inception 4', 'Wide Residual Networks',
+@_fastai_model('Wide Residual Networks', 'Wide Residual Networks',
                'https://arxiv.org/pdf/1605.07146.pdf')
 def wrn(pre): return load_pre(pre, wrn_50_2f, 'wrn_50_2f')
 
@@ -89,3 +90,4 @@ def vgg16(pre): return children(vgg16_bn(pre))[0]
 @_fastai_model('Vgg-19 with batch norm added', 'Very Deep Convolutional Networks for Large-Scale Image Recognition',
                'https://arxiv.org/pdf/1409.1556.pdf')
 def vgg19(pre): return children(vgg19_bn(pre))[0]
+
