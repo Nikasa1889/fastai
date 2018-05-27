@@ -180,20 +180,18 @@ def test_lighting():
                 [0.5 , 0.8 , 0.5 ]], dtype=np.float32)
     a = lighting(im, 0.5, 1)
     np.testing.assert_array_equal(a, e)
-@pytest.mark.skip(reason="It does not work for some reason see #431")
+
 def test_rotate_cv():
     im = np.array([
         [0.,   0.1,  0., ],
         [0.,   0.2,  0., ],
         [0.,   0.3,  0., ],])
     a = rotate_cv(im, 90)
-    # TODO: find out why this test breaks
     e = np.array([[0. , 0. , 0. ],
                   [0.1, 0.2, 0.3],
                   [0. , 0. , 0. ],])
     np.testing.assert_array_equal(a, e)
 
-@pytest.mark.skip(reason="It does not work for some reason see #431")
 def test_rotate_cv_vs_dihedral():
     im = np.array([
         [0.,   0.1,  0., ],
@@ -202,7 +200,7 @@ def test_rotate_cv_vs_dihedral():
     a = rotate_cv(im, 180)
     e = dihedral(im, 6)
     np.testing.assert_array_equal(a, e)
-    
+
 def test_no_crop():
     im = np.array([
         [0.,   0.1,  0., ],
@@ -290,9 +288,9 @@ def test_applying_tranfrom_multiple_times_reset_the_state():
     x2,_ = tfm(t_rand_img128x128x3, None)
     x3,_ = tfm(t_rand_img128x128x3, None)
     assert x1.shape[0] != x2.shape[0] or x1.shape[0] != x3.shape[0], "Each transfromation should give a bit different shape"
-    assert x1.shape[0] < 1000
-    assert x2.shape[0] < 1000
-    assert x3.shape[0] < 1000
+    assert x1.shape[0] < 10000
+    assert x2.shape[0] < 10000
+    assert x3.shape[0] < 10000
 
 stats = inception_stats
 tfm_norm = Normalize(*stats, tfm_y=TfmType.COORD)

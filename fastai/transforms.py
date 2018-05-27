@@ -49,7 +49,7 @@ def rotate_cv(im, deg, mode=cv2.BORDER_CONSTANT, interpolation=cv2.INTER_AREA):
         deg (float): degree to rotate.
     """
     r,c,*_ = im.shape
-    M = cv2.getRotationMatrix2D((c/2,r/2),deg,1)
+    M = cv2.getRotationMatrix2D((c//2,r//2),deg,1)
     return cv2.warpAffine(im,M,(c,r), borderMode=mode, flags=cv2.WARP_FILL_OUTLIERS+interpolation)
 
 def no_crop(im, min_sz=None, interpolation=cv2.INTER_AREA):
@@ -97,8 +97,8 @@ def cutout(im, n_holes, length):
     r,c,*_ = im.shape
     mask = np.ones((r, c), np.int32)
     for n in range(n_holes):
-        y = np.random.randint(r)
-        x = np.random.randint(c)
+        y = np.random.randint(length / 2, r - length / 2)
+        x = np.random.randint(length / 2, c - length / 2)
 
         y1 = int(np.clip(y - length / 2, 0, r))
         y2 = int(np.clip(y + length / 2, 0, r))

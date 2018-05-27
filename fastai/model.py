@@ -5,6 +5,8 @@ from .layer_optimizer import *
 from .swa import *
 from .fp16 import *
 
+IS_TORCH_04 = LooseVersion(torch.__version__) >= LooseVersion('0.4')
+
 def cut_model(m, cut):
     return list(m.children())[:cut] if cut else [m]
 
@@ -57,7 +59,14 @@ class Stepper():
         if self.loss_scale != 1:
             for param in self.fp32_params: param.grad.data.div_(self.loss_scale)
         if self.clip:   # Gradient clipping
-            nn.utils.clip_grad_norm(trainable_params_(self.m), self.clip)
+            if IS_TORCH_04: nn.utils.clip_grad_norm_(trainable_params_(self.m), self.clip)
+            else: nn.utils.clip_grad_norm(trainable_params_(self.m), self.clip)
+        if 'wd' in self.opt.param_groups and self.opt.param_groups['wd'] != 0: 
+            #Weight decay out of the loss. After the gradient computation but before the step.
+            for group in self.opt.param_groups:
+                lr, wd = group['lr'], group['wd']
+                for p in group['params']:
+                    if p.grad is not None: p.data = p.data.add(-wd * lr, p.data)
         self.opt.step()
         if self.fp16: 
             copy_fp32_to_model(self.m, self.fp32_params)
@@ -192,10 +201,11 @@ class IterBatch():
 def validate_next(stepper, metrics, val_iter):
     """Computes the loss on the next minibatch of the validation set."""
     stepper.reset(False)
-    (*x,y) = val_iter.next()
-    preds,l = stepper.evaluate(VV(x), VV(y))
-    res = [to_np(l)[0]]
-    res += [f(preds.data,y) for f in metrics]
+    with no_grad_context():
+        (*x,y) = val_iter.next()
+        preds,l = stepper.evaluate(VV(x), VV(y))
+        res = [to_np(l)[0]]
+        res += [f(preds.data,y) for f in metrics]
     stepper.reset(True)
     return res
 
@@ -211,15 +221,13 @@ def validate(stepper, dl, metrics):
             res.append([f(preds.data, y) for f in metrics])
     return [np.average(loss, 0, weights=batch_cnts)] + list(np.average(np.stack(res), 0, weights=batch_cnts))
 
-def no_grad_context(): return torch.no_grad() if IS_TORCH_04 else contextlib.suppress()
-
 def get_prediction(x):
     if is_listy(x): x=x[0]
     return x.data
 
 def predict(m, dl):
     preda,_ = predict_with_targs_(m, dl)
-    return to_np(torch.cat(preda))
+    return np.concatenate(preda)
 
 def predict_batch(m, x):
     m.eval()
@@ -230,12 +238,12 @@ def predict_with_targs_(m, dl):
     m.eval()
     if hasattr(m, 'reset'): m.reset()
     res = []
-    for *x,y in iter(dl): res.append([get_prediction(m(*VV(x))),y])
+    for *x,y in iter(dl): res.append([get_prediction(to_np(m(*VV(x)))),to_np(y)])
     return zip(*res)
 
 def predict_with_targs(m, dl):
     preda,targa = predict_with_targs_(m, dl)
-    return to_np(torch.cat(preda)), to_np(torch.cat(targa))
+    return np.concatenate(preda), np.concatenate(targa)
 
 # From https://github.com/ncullen93/torchsample
 def model_summary(m, input_size):
