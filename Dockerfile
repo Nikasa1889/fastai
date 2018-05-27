@@ -44,11 +44,16 @@ ENV PATH /opt/conda/envs/fastai/bin:$PATH
 ENV LD_LIBRARY_PATH /usr/local/nvidia/lib:/usr/local/nvidia/lib64
 ENV USER fastai
 
+SHELL ["/bin/bash", "-c"]
+
 # WORKDIR ${FASTAI}
 CMD source activate fastai
 CMD source ~/.bashrc
 
 WORKDIR ${COURSES}
+
+# Upgrade jupyter
+RUN jupyter nbextensions_configurator enable --user
 
 RUN chmod -R a+w ${FASTAI} 
 
